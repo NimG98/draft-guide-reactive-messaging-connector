@@ -43,4 +43,8 @@ public class OrderManager {
     public Map<String, Order> getOrders() {
         return new TreeMap<>(orders);
     }
+
+    public void resetOrder() {
+        orders.clear();
+    }
 }

@@ -19,8 +19,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -42,10 +41,9 @@ import io.openliberty.guides.models.Status;
 public class ServingWindowResource {
 
     private static Logger logger = Logger.getLogger(ServingWindowResource.class.getName());
-    private static Jsonb jsonb = JsonbBuilder.create();
 
     private List<Order> readyList = new ArrayList<Order>();
-    private BlockingQueue<String> completedQueue = new LinkedBlockingQueue<>();
+    private BlockingQueue<Order> completedQueue = new LinkedBlockingQueue<>();
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -64,8 +62,8 @@ public class ServingWindowResource {
             if (order.getOrderId().equals(orderId)) {
                 order.setStatus(Status.COMPLETED);
                 logger.info("Order " + orderId + " is now COMPLETE");
-                logger.info(jsonb.toJson(order));
-                completedQueue.add(jsonb.toJson(order));
+                logger.info(order.toString());
+                completedQueue.add(order);
                 readyList.remove(order);
                 return Response
                         .status(Response.Status.OK)
@@ -82,20 +80,18 @@ public class ServingWindowResource {
     // tag::addReadyOrder[]
     @Incoming("orderReady")
     // end::addReadyOrder[]
-    public void addReadyOrder(String readyOrder)  {
-        Order order = JsonbBuilder.create().fromJson(readyOrder, Order.class);
-        if (order.getStatus().equals(Status.READY)) {
-            logger.info("Order " + order.getOrderId() + " is READY to be completed");
-            logger.info(readyOrder);
-            readyList.add(order);
+    public void addReadyOrder(Order readyOrder)  {
+        if (readyOrder.getStatus().equals(Status.READY)) {
+            logger.info("Order " + readyOrder.getOrderId() + " is READY to be completed");
+            logger.info(readyOrder.toString());
+            readyList.add(readyOrder);
         }
     }
-    
     
     // tag::sendCompletedOrder[]
     @Outgoing("completedOrder")
     // end::sendCompletedOrder[]
-    public PublisherBuilder<String> sendCompletedOrder() {
+    public PublisherBuilder<Order> sendCompletedOrder() {
         return ReactiveStreams.generate(() -> {
             try {
                 return completedQueue.take();
@@ -105,12 +101,13 @@ public class ServingWindowResource {
             }
         });
     }
-    
-    @POST
-    @Path("/reset")
-    public void reset() {
-    	readyList.clear();
+
+    @DELETE
+    public Response resetServingWindow() {
+        readyList.clear();
+        return Response
+                .status(Response.Status.OK)
+                .build();
     }
-    
 
 }
