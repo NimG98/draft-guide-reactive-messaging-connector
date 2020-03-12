@@ -42,7 +42,7 @@ public class AppContainerConfig implements SharedContainerConfiguration {
             // The application talks to KafkaContainer from outside of the Docker network,
             // and it can talk to kafka directly on 9093. 
             // The MicroProfile configure should define as following:
-            // mp.messaging.connector.custom-kafka.bootstrap.servers=localhost:9093
+            // mp.messaging.connector.custom-connector.bootstrap.servers=localhost:9093
         } else {
             // Run by maven verify goal.
             // The application talks to KafkaContainer within Docker network, 

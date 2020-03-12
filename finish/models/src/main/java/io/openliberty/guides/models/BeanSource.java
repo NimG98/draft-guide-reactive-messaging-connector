@@ -18,6 +18,7 @@ public class BeanSource {
     BehaviorProcessor<Message<String>> processor = BehaviorProcessor.create();
 
     public void publishMessage(String payload) {
+        System.out.println("payload" + payload);
         System.out.printf("publishMessage, payload=%s\n", payload);
         Message<String> msg = Message.of(payload);
         processor.onNext(msg);

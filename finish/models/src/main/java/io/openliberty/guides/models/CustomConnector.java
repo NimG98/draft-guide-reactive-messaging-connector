@@ -28,8 +28,8 @@ import org.eclipse.microprofile.reactive.streams.operators.SubscriberBuilder;
 import org.reactivestreams.*;
 
 @ApplicationScoped
-@Connector("custom-kafka")
-public class CustomKafkaConnector implements IncomingConnectorFactory, OutgoingConnectorFactory {
+@Connector("custom-connector")
+public class CustomConnector implements IncomingConnectorFactory, OutgoingConnectorFactory {
 
     @Inject
     BeanSource beanSource;
@@ -46,16 +46,16 @@ public class CustomKafkaConnector implements IncomingConnectorFactory, OutgoingC
                 public void onNext(Message<Object> data) {
                       System.out.println("hello");
                       System.out.println(data);
-                      System.out.println(arg0.toString());
                       System.out.println(arg0.getValue("topic", String.class));
-                      
-
+                      // do something?
                 }
                 @Override
                 public void onError(Throwable t) {
+                  t.printStackTrace();
                 }
                 @Override
                 public void onComplete() {
+                  System.out.println("Done");
                 }
               });
     }
