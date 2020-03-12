@@ -13,6 +13,7 @@
 package io.openliberty.guides.models;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -30,7 +31,10 @@ import org.reactivestreams.*;
 @Connector("custom-kafka")
 public class CustomKafkaConnector implements IncomingConnectorFactory, OutgoingConnectorFactory {
 
-    /* @Override
+    @Inject
+    BeanSource beanSource;
+
+    @Override
     public SubscriberBuilder<? extends Message<?>, Void> getSubscriberBuilder(Config arg0) {
       return ReactiveStreams.<Message<Object>> builder().to(
               new Subscriber<Message<Object>>() {
@@ -39,10 +43,13 @@ public class CustomKafkaConnector implements IncomingConnectorFactory, OutgoingC
                   s.request(Long.MAX_VALUE);
                 }
                 @Override
-                public void onNext(Message<Object> integer) {
+                public void onNext(Message<Object> data) {
                       System.out.println("hello");
+                      System.out.println(data);
                       System.out.println(arg0.toString());
                       System.out.println(arg0.getValue("topic", String.class));
+                      
+
                 }
                 @Override
                 public void onError(Throwable t) {
@@ -51,57 +58,12 @@ public class CustomKafkaConnector implements IncomingConnectorFactory, OutgoingC
                 public void onComplete() {
                 }
               });
-    } */
-
-    private List<String> elements = new CopyOnWriteArrayList<>();
-
-    /**
-     * Stores the received configs.
-     */
-    private List<Config> configs = new CopyOnWriteArrayList<>();
-
-    List<String> elements() {
-        return elements;
-    }
-
-    List<Config> getReceivedConfigurations() {
-        return configs;
-    }
-
-    @Override
-    public SubscriberBuilder<? extends Message<?>, Void> getSubscriberBuilder(Config config) {
-        System.out.println("OutgoingConnector - getSubscriberBuilder");
-        // Check mandatory attributes
-        System.out.println(config.getValue(CHANNEL_NAME_ATTRIBUTE, String.class));
-        System.out.println(config.getValue(CONNECTOR_ATTRIBUTE, String.class));
-
-        configs.add(config);
-        System.out.println(configs);
-
-        // Would throw a NoSuchElementException if not set.
-        config.getValue("bootstrap.servers", String.class);
-        config.getValue("topic", String.class);
-
-        return ReactiveStreams.<Message<String>>builder().map(Message::getPayload).forEach(s -> elements.add(s));
     }
 
     @Override
     public PublisherBuilder<? extends Message<?>> getPublisherBuilder(Config config) {
-        System.out.println("IncomingConnector - getPublisherBuilder");
-        configs.add(config);
-        System.out.println(configs);
-        String[] values = config.getValue("items", String.class).split(",");
-        System.out.println(values);
-
-        // Check mandatory attributes
-        System.out.println(config.getValue(CHANNEL_NAME_ATTRIBUTE, String.class));
-        System.out.println(config.getValue(CONNECTOR_ATTRIBUTE, String.class));
-
-        // Would throw a NoSuchElementException if not set.
-        config.getValue("bootstrap.servers", String.class);
-        config.getValue("topic", String.class);
-        config.getValue("group.id", String.class);
-
-        return ReactiveStreams.fromIterable(Arrays.asList(values)).map(Message::of);
+      return beanSource.source();
     }
+
+
 }
